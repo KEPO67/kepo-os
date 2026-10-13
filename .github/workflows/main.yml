@@ -7,21 +7,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
+      options: --privileged
     steps:
-      - name: Construction de Kepo OS (ISO Bootable & Installable)
+      - name: Construction de Kepo OS (ISO Bootable)
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y live-build debootstrap squashfs-tools xorriso isolinux
+          apt-get update -y
+          apt-get install -y live-build debootstrap squashfs-tools xorriso isolinux syslinux-common grub-pc-bin grub-efi-amd64-bin mtools dosfstools
           mkdir build && cd build
           lb config --distribution bookworm --archive-areas "main contrib non-free non-free-firmware" --architectures amd64 --linux-flavours amd64 --bootappend-live "boot=live components quiet splash hostname=kepo-os username=kepo" --iso-application "Kepo OS" --iso-volume "KEPO_OS"
           mkdir -p config/package-lists
-          echo "xorg xfce4 xfce4-terminal plank lightdm thunar network-manager-gnome firefox-esr calamares calamares-settings-debian arc-theme papirus-icon-theme sudo neofetch" > config/package-lists/kepo.list.chroot
-          mkdir -p config/includes.chroot/etc/skel/.config/autostart
-          printf "[Desktop Entry]\nType=Application\nName=Kepo Dock\nExec=plank\nX-GNOME-Autostart-enabled=true\n" > config/includes.chroot/etc/skel/.config/autostart/plank.desktop
-          mkdir -p config/hooks/normal
-          printf "#!/bin/sh\nsed -i 's/PRETTY_NAME=.*/PRETTY_NAME=\"Kepo OS 1.0\"/' /etc/os-release\nsed -i 's/NAME=.*/NAME=\"Kepo OS\"/' /etc/os-release\n" > config/hooks/normal/9999-kepo.hook.chroot
-          chmod +x config/hooks/normal/9999-kepo.hook.chroot
-          sudo lb build
+          echo "xorg xfce4 xfce4-terminal plank lightdm thunar network-manager-gnome firefox-esr calamares calamares-settings-debian arc-theme papirus-icon-theme sudo" > config/package-lists/kepo.list.chroot
+          lb build
           mv live-image-amd64.hybrid.iso ../KepoOS.iso
 
       - name: Générer le lien de téléchargement
